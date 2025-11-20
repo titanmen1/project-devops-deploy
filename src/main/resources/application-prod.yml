@@ -18,3 +18,12 @@ spring:
   h2:
     console:
       enabled: false
+
+storage:
+  s3:
+    bucket: ${STORAGE_S3_BUCKET:}
+    region: ${STORAGE_S3_REGION:}
+    endpoint: ${STORAGE_S3_ENDPOINT:}
+    access-key: ${STORAGE_S3_ACCESSKEY:}
+    secret-key: ${STORAGE_S3_SECRETKEY:}
+    cdn-url: ${STORAGE_S3_CDNURL:}

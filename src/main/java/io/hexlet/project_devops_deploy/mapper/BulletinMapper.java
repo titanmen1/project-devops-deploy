@@ -3,20 +3,35 @@ package io.hexlet.project_devops_deploy.mapper;
 import io.hexlet.project_devops_deploy.dto.BulletinDto;
 import io.hexlet.project_devops_deploy.dto.BulletinRequest;
 import io.hexlet.project_devops_deploy.model.Bulletin;
+import io.hexlet.project_devops_deploy.storage.ImageStorageService;
+import org.mapstruct.AfterMapping;
+import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.ReportingPolicy;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING, unmappedTargetPolicy = ReportingPolicy.IGNORE, nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-public interface BulletinMapper {
+public abstract class BulletinMapper {
 
-    BulletinDto toDto(Bulletin entity);
+    @Autowired
+    private ImageStorageService imageStorageService;
 
-    Bulletin toEntity(BulletinDto dto);
+    @Mapping(target = "imageUrl", ignore = true)
+    public abstract BulletinDto toDto(Bulletin entity);
 
-    Bulletin toEntity(BulletinRequest request);
+    @AfterMapping
+    protected void fillImageUrl(Bulletin entity, @MappingTarget BulletinDto dto) {
+        dto.setImageUrl(imageStorageService.getUrl(entity.getImageKey()).orElse(null));
+    }
 
-    void updateEntity(BulletinRequest request, @MappingTarget Bulletin bulletin);
+    @BeanMapping(ignoreUnmappedSourceProperties = "imageUrl")
+    public abstract Bulletin toEntity(BulletinDto dto);
+
+    public abstract Bulletin toEntity(BulletinRequest request);
+
+    public abstract void updateEntity(BulletinRequest request, @MappingTarget Bulletin bulletin);
 }

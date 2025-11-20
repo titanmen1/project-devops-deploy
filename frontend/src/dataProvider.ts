@@ -1,11 +1,7 @@
-import {
-  type DataProvider,
-  fetchUtils,
-  type Identifier,
-  type GetListResult,
-} from "react-admin";
+import { type DataProvider, fetchUtils, type Identifier } from "react-admin";
 
 const apiUrl = import.meta.env.VITE_API_URL ?? "/api";
+const fileUploadUrl = `${apiUrl}/files/upload`;
 
 const httpClient = (url: string, options: fetchUtils.Options = {}) => {
   if (!options.headers) {
@@ -23,45 +19,144 @@ const getCollectionUrl = (resource: string) => `${apiUrl}/${resource}`;
 const getRecordUrl = (resource: string, id: Identifier) =>
   `${getCollectionUrl(resource)}/${id}`;
 
-const sortData = (
-  data: any[],
-  field: string,
-  order: "ASC" | "DESC",
-): any[] => {
-  if (!field) {
-    return data;
-  }
-
-  return [...data].sort((a, b) => {
-    if (a[field] === b[field]) {
-      return 0;
-    }
-    if (a[field] > b[field]) {
-      return order === "ASC" ? 1 : -1;
-    }
-    return order === "ASC" ? -1 : 1;
-  });
+type JsonRecord = Record<string, unknown>;
+type MutablePayload = JsonRecord & {
+  image?: { rawFile?: unknown };
+  imageUrl?: string;
+  imageKey?: string;
 };
 
-const paginate = (
-  data: any[],
-  page: number,
-  perPage: number,
-): GetListResult<any> => {
-  const start = (page - 1) * perPage;
-  const end = start + perPage;
+const asRecord = (payload: unknown): Record<string, unknown> | null =>
+  typeof payload === "object" && payload !== null
+    ? (payload as Record<string, unknown>)
+    : null;
 
-  return {
-    data: data.slice(start, end),
-    total: data.length,
-  };
+const extractCollection = (payload: unknown): JsonRecord[] => {
+  if (Array.isArray(payload)) {
+    return payload as JsonRecord[];
+  }
+
+  const record = asRecord(payload);
+  if (record && Array.isArray(record.data)) {
+    return record.data as JsonRecord[];
+  }
+
+  return [];
+};
+
+const extractTotal = (payload: unknown, fallback: number) => {
+  const record = asRecord(payload);
+  if (record && typeof record.total === "number") {
+    return record.total;
+  }
+
+  if (record && typeof record.total === "string") {
+    const parsed = Number(record.total);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+
+  return fallback;
+};
+
+const readPagePayload = (
+  payload: unknown,
+): { data: JsonRecord[]; total: number } => {
+  const data = extractCollection(payload);
+  return { data, total: extractTotal(payload, data.length) };
+};
+
+const buildQueryString = (options: {
+  pagination?: { page: number; perPage: number };
+  sort?: { field: string; order?: "ASC" | "DESC" };
+  filter?: Record<string, unknown>;
+}) => {
+  const searchParams = new URLSearchParams();
+
+  if (options.pagination) {
+    const { page, perPage } = options.pagination;
+    if (page != null) {
+      searchParams.set("page", String(page));
+    }
+    if (perPage != null) {
+      searchParams.set("perPage", String(perPage));
+    }
+  }
+
+  if (options.sort?.field) {
+    searchParams.set("sort", options.sort.field);
+    if (options.sort.order) {
+      searchParams.set("order", options.sort.order);
+    }
+  }
+
+  Object.entries(options.filter ?? {}).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === "") {
+      return;
+    }
+
+    if (Array.isArray(value)) {
+      value.forEach((entry) => {
+        searchParams.append(key, String(entry));
+      });
+      return;
+    }
+
+    searchParams.set(key, String(value));
+  });
+
+  const query = searchParams.toString();
+  return query.length ? `?${query}` : "";
+};
+
+const uploadImage = async (file?: File) => {
+  if (!file) {
+    return undefined;
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+  const { json } = await httpClient(fileUploadUrl, {
+    method: "POST",
+    body: formData,
+  });
+  return json as { key: string; url?: string };
+};
+
+const extractImageFile = (data: MutablePayload) => {
+  const candidate = data?.image;
+  if (candidate?.rawFile instanceof File) {
+    return candidate.rawFile;
+  }
+  return undefined;
+};
+
+const preparePayload = async (data: JsonRecord) => {
+  const payload = { ...data } as MutablePayload;
+  delete payload.image;
+  delete payload.imageUrl;
+
+  const rawFile = extractImageFile(payload);
+  if (rawFile) {
+    const result = await uploadImage(rawFile);
+    if (result?.key) {
+      payload.imageKey = result.key;
+    }
+  }
+
+  return payload;
 };
 
 export const dataProvider: DataProvider = {
   getList: async (resource, params) => {
-    const { json } = await httpClient(getCollectionUrl(resource));
-    const sorted = sortData(json, params.sort.field, params.sort.order);
-    return paginate(sorted, params.pagination.page, params.pagination.perPage);
+    const query = buildQueryString({
+      pagination: params.pagination,
+      sort: params.sort,
+      filter: params.filter,
+    });
+    const { json } = await httpClient(`${getCollectionUrl(resource)}${query}`);
+    return readPagePayload(json);
   },
 
   getOne: async (resource, params) => {
@@ -77,27 +172,30 @@ export const dataProvider: DataProvider = {
   },
 
   getManyReference: async (resource, params) => {
-    const { json } = await httpClient(getCollectionUrl(resource));
-    const filtered = json.filter(
-      (record: Record<string, Identifier>) =>
-        record[params.target] === params.id,
-    );
-    const sorted = sortData(filtered, params.sort.field, params.sort.order);
-    return paginate(sorted, params.pagination.page, params.pagination.perPage);
+    const filter = { ...(params.filter ?? {}), [params.target]: params.id };
+    const query = buildQueryString({
+      pagination: params.pagination,
+      sort: params.sort,
+      filter,
+    });
+    const { json } = await httpClient(`${getCollectionUrl(resource)}${query}`);
+    return readPagePayload(json);
   },
 
   create: async (resource, params) => {
+    const body = await preparePayload(params.data);
     const { json } = await httpClient(getCollectionUrl(resource), {
       method: "POST",
-      body: JSON.stringify(params.data),
+      body: JSON.stringify(body),
     });
     return { data: json };
   },
 
   update: async (resource, params) => {
+    const body = await preparePayload(params.data);
     const { json } = await httpClient(getRecordUrl(resource, params.id), {
       method: "PUT",
-      body: JSON.stringify(params.data),
+      body: JSON.stringify(body),
     });
     return { data: json };
   },

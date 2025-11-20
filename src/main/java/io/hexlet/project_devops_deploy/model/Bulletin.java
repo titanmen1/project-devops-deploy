@@ -10,6 +10,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.Setter;
@@ -40,6 +41,12 @@ public class Bulletin implements BaseEntity {
 
     @Column(nullable = false)
     private String contact;
+
+    @Column(nullable = false, precision = 12, scale = 2)
+    private BigDecimal price = BigDecimal.ZERO;
+
+    @Column(name = "image_key")
+    private String imageKey;
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)

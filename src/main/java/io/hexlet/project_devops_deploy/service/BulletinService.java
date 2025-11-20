@@ -2,15 +2,22 @@ package io.hexlet.project_devops_deploy.service;
 
 import io.hexlet.project_devops_deploy.dto.BulletinDto;
 import io.hexlet.project_devops_deploy.dto.BulletinRequest;
+import io.hexlet.project_devops_deploy.dto.PageResponse;
 import io.hexlet.project_devops_deploy.exception.ResourceNotFoundException;
 import io.hexlet.project_devops_deploy.mapper.BulletinMapper;
 import io.hexlet.project_devops_deploy.model.Bulletin;
 import io.hexlet.project_devops_deploy.repository.BulletinRepository;
-import java.util.List;
+import io.hexlet.project_devops_deploy.specification.BulletinSpecifications;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 @Service
 @Transactional
@@ -29,8 +36,16 @@ public class BulletinService {
     }
 
     @Transactional(readOnly = true)
-    public List<BulletinDto> findAll() {
-        return repository.findAll().stream().map(mapper::toDto).toList();
+    public PageResponse<BulletinDto> findAll(int page, int perPage, String sort, Sort.Direction order, Map<String, String> filters) {
+        int pageIndex = Math.max(page - 1, 0);
+        int pageSize = Math.max(perPage, 1);
+        String sortProperty = StringUtils.hasText(sort) ? sort : "createdAt";
+        PageRequest pageable = PageRequest.of(pageIndex, pageSize, Sort.by(order, sortProperty));
+
+        Map<String, String> safeFilters = filters == null ? Map.of() : filters;
+        Specification<Bulletin> specification = BulletinSpecifications.fromFilters(safeFilters);
+        Page<BulletinDto> result = repository.findAll(specification, pageable).map(mapper::toDto);
+        return new PageResponse<>(result.getContent(), result.getTotalElements());
     }
 
     @Transactional(readOnly = true)

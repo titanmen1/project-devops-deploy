@@ -1,12 +1,12 @@
 import { Admin, Resource } from "react-admin";
-import { Layout } from "./Layout";
-import { dataProvider } from "./dataProvider";
 import {
-  BulletinList,
   BulletinCreate,
   BulletinEdit,
+  BulletinList,
   BulletinShow,
 } from "./bulletins";
+import { dataProvider } from "./dataProvider";
+import { Layout } from "./Layout";
 
 export const App = () => (
   <Admin layout={Layout} dataProvider={dataProvider}>

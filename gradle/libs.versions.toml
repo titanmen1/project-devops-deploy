@@ -54,6 +54,7 @@ h2 = "2.3.232"
 junit-bom = "6.0.0"
 instancio = "5.5.1"
 postgresql = "42.7.5"
+aws-sdk = "2.29.15"
 
 [libraries]
 
@@ -84,3 +85,4 @@ datafaker = { module = "net.datafaker:datafaker", version.ref = "datafaker" }
 instancioCore = { module = "org.instancio:instancio-core", version.ref = "instancio" }
 springdocOpenapi = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc-openapi-ui" }
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
+awsS3 = { module = "software.amazon.awssdk:s3", version.ref = "aws-sdk" }
