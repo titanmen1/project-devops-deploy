@@ -43,15 +43,17 @@ shadow-plugin = "9.1.0"
 # sonarqube-plugin = "6.3.1.5724"
 spotless-plugin = "8.0.0"
 
-# jackson-databind-nullable = "0.2.7"
-# springdoc-openapi-ui = "2.8.13"
+jackson-databind-nullable = "0.2.7"
+springdoc-openapi-ui = "2.8.13"
 # commons-lang3 = "3.18.0"
-# datafaker = "2.4.4"
+datafaker = "2.4.4"
 # instancio-junit = "5.5.1"
 # jsonunit-assertj = "4.1.1"
-# mapstruct = "1.6.3"
-# h2 = "2.3.232"
+mapstruct = "1.6.3"
+h2 = "2.3.232"
 junit-bom = "6.0.0"
+instancio = "5.5.1"
+postgresql = "42.7.5"
 
 [libraries]
 
@@ -73,3 +75,12 @@ springSecurityTest = { module = "org.springframework.security:spring-security-te
 junitBom = { module = "org.junit:junit-bom", version.ref = "junit-bom" }
 junitJupiter = { module = "org.junit.jupiter:junit-jupiter" }
 junitPlatformLauncher = { module = "org.junit.platform:junit-platform-launcher" }
+mapstruct = { module = "org.mapstruct:mapstruct", version.ref = "mapstruct" }
+mapstructProcessor = { module = "org.mapstruct:mapstruct-processor", version.ref = "mapstruct" }
+lombok = { module = "org.projectlombok:lombok", version = "1.18.34" }
+lombokMapstructBinding = { module = "org.projectlombok:lombok-mapstruct-binding", version = "0.2.0" }
+jacksonDatabindNullable = { module = "org.openapitools:jackson-databind-nullable", version.ref = "jackson-databind-nullable" }
+datafaker = { module = "net.datafaker:datafaker", version.ref = "datafaker" }
+instancioCore = { module = "org.instancio:instancio-core", version.ref = "instancio" }
+springdocOpenapi = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc-openapi-ui" }
+postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
