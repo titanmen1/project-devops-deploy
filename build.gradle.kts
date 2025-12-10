@@ -58,6 +58,7 @@ dependencies {
     implementation(libs.jacksonDatabindNullable)
     implementation(libs.datafaker)
     implementation(libs.awsS3)
+    implementation(libs.logstashLogbackEncoder)
 }
 
 tasks.test {

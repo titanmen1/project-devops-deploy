@@ -34,7 +34,7 @@ Key variables are read directly by Spring Boot (see `src/main/resources/applicat
 | `STORAGE_S3_ACCESSKEY`       | Access key ID                                                 | empty                                        |
 | `STORAGE_S3_SECRETKEY`       | Secret key                                                    | empty                                        |
 | `STORAGE_S3_CDNURL`          | Optional public CDN prefix                                    | empty                                        |
-| `MANAGEMENT_SERVER_PORT`    | Port for Spring Actuator endpoints (health, metrics, etc.)    | `9090`            |
+| `MANAGEMENT_SERVER_PORT`     | Port for Spring Actuator endpoints (health, metrics, etc.)    | `9090`                                       |
 | `JAVA_OPTS`                  | Extra JVM parameters (heap, `-Dspring.profiles.active`, etc.) | empty                                        |
 
 All other variables supported by Spring Boot can be overridden the same way; check the application configuration files if you need to confirm a property name.
@@ -155,10 +155,16 @@ Useful JVM options:
 
 ## Monitoring / management ports
 
-- Application traffic still uses port `8080` by default. Actuator endpoints (health, metrics, Prometheus scrape, logfile) listen on `MANAGEMENT_SERVER_PORT`. Override it via env vars when you need a different port.
+- Application traffic still uses port `8080` by default. Actuator endpoints (health, metrics, Prometheus scrape, logfile) listen on `MANAGEMENT_SERVER_PORT` (defaults to `9090` for every profile). Override it via env vars when you need a different port.
 - If your deployment does **not** include Prometheus/Grafana yet, you can ignore the management port entirely; the application starts normally even if nothing scrapes `/actuator`. Simply avoid publishing the management port in Docker/Kubernetes until you need it.
 - When monitoring is enabled, expose both ports, e.g. `docker run -p 8080:8080 -p 9090:9090 ...` and point Prometheus to `http://<host>:9090/actuator/prometheus`.
 - Health probes are available at `/actuator/health/liveness` and `/actuator/health/readiness`; Grafana/Loki integrations should use the same port/env variable.
+
+## Logging
+
+- The backend ships with `src/main/resources/logback-spring.xml`, which writes structured JSON events to `stdout`. Every record contains `timestamp`, `app`, `environment`, `instance`, `logger`, `thread`, message arguments, MDC, and stack traces so Promtail/Loki (or any log shipper) can parse them without extra processing.
+- No extra variables are required, but you can supply a different configuration via Spring Boot’s standard options (`LOGGING_CONFIG`, `logging.config`, or by overriding `logback-spring.xml` on the classpath).
+- Container runtimes should forward `stdout`/`stderr` to your logging pipeline. Avoid redirecting logs to files unless your platform explicitly demands it.
 
 ## Image Upload Checks
 

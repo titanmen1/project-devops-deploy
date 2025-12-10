@@ -87,3 +87,4 @@ springdocOpenapi = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 awsS3 = { module = "software.amazon.awssdk:s3", version.ref = "aws-sdk" }
 micrometerPrometheus = { module = "io.micrometer:micrometer-registry-prometheus" }
+logstashLogbackEncoder = { module = "net.logstash.logback:logstash-logback-encoder", version = "8.0" }
