@@ -86,3 +86,4 @@ instancioCore = { module = "org.instancio:instancio-core", version.ref = "instan
 springdocOpenapi = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc-openapi-ui" }
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 awsS3 = { module = "software.amazon.awssdk:s3", version.ref = "aws-sdk" }
+micrometerPrometheus = { module = "io.micrometer:micrometer-registry-prometheus" }
