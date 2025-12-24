@@ -197,3 +197,33 @@ Override the host/port with `MANAGEMENT_SERVER_PORT` if you changed it; no Prome
     - Image shows up in bulletin show view (URL should either point to CDN or be a presigned S3 link).
     - Object exists in S3 bucket (check via AWS console or `aws s3 ls s3://your-bucket/bulletins/...`).
 5. Optional: run `curl -I "$(curl -s .../api/files/view?key=... | jq -r .url)"` to ensure the presigned URL is valid from the production environment.
+
+## Docker Deployment
+
+### Building the Docker Image
+
+To build the Docker image:
+
+```bash
+make docker-build
+```
+
+### Running the Application in Docker
+
+To build the Docker image:
+
+```bash
+make docker-run
+```
+Note: Make sure to set the required environment variables before running:
+```bash
+export SPRING_DATASOURCE_URL=jdbc:postgresql://your-db-host:5432/bulletins
+export SPRING_DATASOURCE_USERNAME=your-username
+export SPRING_DATASOURCE_PASSWORD=your-password
+```
+
+### Stopping the Docker Container
+
+```bash
+make docker-stop
+```
