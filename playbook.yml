@@ -8,3 +8,5 @@
         docker_packages_state: present
         docker_users:
           - artem_arkhipov
+
+    - role: docker_deploy
