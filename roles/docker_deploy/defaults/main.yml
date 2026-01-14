@@ -1,0 +1,20 @@
+---
+deploy_image: hello-world:latest
+deploy_container_name: hello_world
+
+deploy_detach: true
+deploy_restart_policy: unless-stopped
+deploy_run_args: ""
+
+deploy_ports: []
+deploy_env: {}
+
+deploy_host_dirs: []
+deploy_mounts: []
+
+deploy_track_releases: true
+deploy_release_dir: /opt/bulletins/release
+
+deploy_registry: ""
+deploy_registry_username: ""
+deploy_registry_password: ""

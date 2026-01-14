@@ -1,0 +1,33 @@
+---
+deploy_image: ghcr.io/titanmen1/project-devops-deploy:latest
+deploy_container_name: bulletins
+
+deploy_run_args: "--network bulletins-net"
+
+deploy_host_dirs:
+  - /opt/bulletins/data/bulletin-images
+  - /opt/bulletins/logs
+
+deploy_mounts:
+  - /opt/bulletins/data/bulletin-images:/tmp/bulletin-images
+  - /opt/bulletins/logs:/var/log/bulletins
+
+deploy_ports:
+  - "8080:8080"
+  - "9090:9090"
+
+deploy_env:
+  SPRING_PROFILES_ACTIVE: "prod"
+  SPRING_DATASOURCE_URL: "{{ vault_spring_datasource_url }}"
+  SPRING_DATASOURCE_USERNAME: "{{ vault_spring_datasource_username }}"
+  SPRING_DATASOURCE_PASSWORD: "{{ vault_spring_datasource_password }}"
+  STORAGE_S3_BUCKET: "{{ vault_storage_s3_bucket }}"
+  STORAGE_S3_REGION: "{{ vault_storage_s3_region }}"
+  STORAGE_S3_ENDPOINT: "{{ vault_storage_s3_endpoint }}"
+  STORAGE_S3_ACCESSKEY: "{{ vault_storage_s3_accesskey }}"
+  STORAGE_S3_SECRETKEY: "{{ vault_storage_s3_secretkey }}"
+  STORAGE_S3_CDNURL: "{{ vault_storage_s3_cdnurl }}"
+
+deploy_registry: ghcr.io
+deploy_registry_username: "{{ vault_ghcr_username }}"
+deploy_registry_password: "{{ vault_ghcr_token }}"
