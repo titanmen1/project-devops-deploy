@@ -37,5 +37,13 @@ out/
 .vscode/
 *.db
 
+# Ansible Vault
 .vault_pass
 .vault_pass.txt
+
+# Ansible roles - ignore all roles except docker_deploy
+roles/*
+!roles/docker_deploy/
+roles/*/
+!roles/docker_deploy/**
+!roles/requirements.yml
