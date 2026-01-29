@@ -4,8 +4,8 @@
     <springProperty scope="context" name="activeProfile" source="spring.profiles.active" defaultValue="dev"/>
     <property name="hostname" value="${HOSTNAME:-local}"/>
 
-    <property name="logDir" value="/var/log/bulletins"/>
-    <property name="logFile" value="${logDir}/app.log"/>
+<!--    <property name="logDir" value="/var/log/bulletins"/>-->
+<!--    <property name="logFile" value="${logDir}/app.log"/>-->
 
     <appender name="JSON_STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
