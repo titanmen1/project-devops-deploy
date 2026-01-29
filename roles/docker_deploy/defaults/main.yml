@@ -12,6 +12,10 @@ deploy_env: {}
 deploy_host_dirs: []
 deploy_mounts: []
 
+deploy_extract_static: false
+deploy_static_src_path: "/app/frontend-dist"
+deploy_static_dest: "/opt/bulletins/static"
+
 deploy_track_releases: true
 deploy_release_dir: /opt/bulletins/release
 

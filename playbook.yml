@@ -10,3 +10,5 @@
           - artem_arkhipov
 
     - role: docker_deploy
+
+    - role: nginx

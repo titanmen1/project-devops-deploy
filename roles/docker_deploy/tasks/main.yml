@@ -32,6 +32,52 @@
   register: docker_pull
   changed_when: "'Downloaded newer image' in docker_pull.stdout or 'Downloaded newer image' in docker_pull.stderr"
 
+- name: Ensure static destination directory exists
+  ansible.builtin.file:
+    path: "{{ deploy_static_dest }}"
+    state: directory
+    mode: "0755"
+  when: deploy_extract_static | bool
+
+- name: Remove existing temp container if exists
+  ansible.builtin.command: docker rm -f {{ deploy_container_name }}_static
+  register: remove_existing_container
+  failed_when: false
+  changed_when: remove_existing_container.rc == 0
+  when: deploy_extract_static | bool
+
+- name: Create temp container for static extraction
+  ansible.builtin.command: docker create --name {{ deploy_container_name }}_static {{ deploy_image }}
+  register: docker_static_create
+  changed_when: true
+  when: deploy_extract_static | bool
+
+- name: Check what's in the container static path
+  ansible.builtin.command: docker run --rm {{ deploy_image }} ls -la /app/frontend-dist
+  register: container_ls
+  changed_when: false
+  failed_when: false
+  when: deploy_extract_static | bool
+
+- name: Debug container contents
+  ansible.builtin.debug:
+    var: container_ls.stdout_lines
+  when: deploy_extract_static | bool
+
+- name: Copy static assets from image to host
+  ansible.builtin.command: docker cp {{ deploy_container_name }}_static:{{ deploy_static_src_path }}/. {{ deploy_static_dest }}/
+  register: docker_static_copy
+  changed_when: true
+  when: deploy_extract_static | bool
+
+- name: Remove temp container for static extraction
+  ansible.builtin.command: docker rm -f {{ deploy_container_name }}_static
+  register: docker_static_rm
+  failed_when: false
+  changed_when: docker_static_rm.rc == 0
+  when: deploy_extract_static | bool
+
+
 - name: Resolve pulled image id
   ansible.builtin.command: docker image inspect {{ deploy_image }} --format {{'{{'}}.Id{{'}}'}}
   register: docker_image_id

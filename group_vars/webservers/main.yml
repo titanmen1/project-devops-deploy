@@ -16,6 +16,16 @@ deploy_ports:
   - "8080:8080"
   - "9090:9090"
 
+deploy_extract_static: true
+deploy_static_src_path: "/app/frontend-dist"
+deploy_static_dest: "/opt/bulletins/static"
+
+nginx_server_name: "hexlet-third-project.crabdance.com"
+nginx_backend_port: 8080
+nginx_management_port: 9090
+nginx_serve_static: true
+nginx_static_root: "/opt/bulletins/static"
+
 deploy_env:
   SPRING_PROFILES_ACTIVE: "prod"
   SPRING_DATASOURCE_URL: "{{ vault_spring_datasource_url }}"
