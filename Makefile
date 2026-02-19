@@ -20,15 +20,6 @@ docker-login-ghcr:
 docker-push-ghcr: docker-login-ghcr docker-build-ghcr
 	docker buildx build --platform $(PLATFORMS) -t $(IMAGE):$(TAG) --push .
 
-ansible-install:
-	ansible-galaxy role install -r requirements.yml
-
-deploy:
-	ansible-playbook playbook.yml --vault-password-file .vault_pass
-
-rollback:
-	ansible-playbook rollback.yml --vault-password-file .vault_pass
-
 update-gradle:
 	./gradlew wrapper --gradle-version 9.2.1
 
