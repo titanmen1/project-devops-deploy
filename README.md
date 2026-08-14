@@ -4,7 +4,10 @@
 
 Bulletin board service.
 
-Deployed host: `http://hexlet-third-project.crabdance.com`
+The image is published to `ghcr.io/titanmen1/project-devops-deploy` — see
+[Container registry (GHCR)](#container-registry-ghcr) for login, build and push.
+Deployment to Managed Kubernetes lives in a separate repository:
+[devops-engineer-from-scratch-project-319](https://github.com/titanmen1/devops-engineer-from-scratch-project-319).
 
 > **Fork policy**: this upstream repository is read-only. We do not review or merge pull requests and we do not accept infrastructure changes (Dockerfiles, Ansible roles, CI/CD workflows, etc.). To experiment or extend the project, fork it and work inside your own repository.
 
@@ -38,6 +41,7 @@ Key variables are read directly by Spring Boot (see `src/main/resources/applicat
 | `STORAGE_S3_CDNURL`          | Optional public CDN prefix                                    | empty                                        |
 | `MANAGEMENT_SERVER_PORT`     | Port for Spring Actuator endpoints (health, metrics, etc.)    | `9090`                                       |
 | `JAVA_OPTS`                  | Extra JVM parameters (heap, `-Dspring.profiles.active`, etc.) | empty                                        |
+| `LOG_DIR`                    | Directory for the rolling log file behind `/actuator/logfile` | `/tmp/bulletins-logs`                        |
 
 All other variables supported by Spring Boot can be overridden the same way; check the application configuration files if you need to confirm a property name.
 
@@ -179,6 +183,7 @@ Override the host/port with `MANAGEMENT_SERVER_PORT` if you changed it; no Prome
 - The backend ships with `src/main/resources/logback-spring.xml`, which writes structured JSON events to `stdout`. Every record contains `timestamp`, `app`, `environment`, `instance`, `logger`, `thread`, message arguments, MDC, and stack traces so Promtail/Loki (or any log shipper) can parse them without extra processing.
 - No extra variables are required, but you can supply a different configuration via Spring Boot’s standard options (`LOGGING_CONFIG`, `logging.config`, or by overriding `logback-spring.xml` on the classpath).
 - Container runtimes should forward `stdout`/`stderr` to your logging pipeline. Avoid redirecting logs to files unless your platform explicitly demands it.
+- Alongside `stdout`, the same JSON goes to a rolling file so that `/actuator/logfile` has something to serve. It is written to `LOG_DIR` (`/tmp/bulletins-logs` by default) rather than the working directory, so the container can run as a non-root user and with a read-only root filesystem. Point `LOG_DIR` at a writable volume if you want the file to survive restarts.
 
 ## Image Upload Checks
 
@@ -230,4 +235,55 @@ export SPRING_DATASOURCE_PASSWORD=your-password
 
 ```bash
 make docker-stop
+```
+
+## Container registry (GHCR)
+
+The image is published to GitHub Container Registry as
+`ghcr.io/titanmen1/project-devops-deploy`.
+
+### Automatic publishing
+
+The `build-and-push` job in [.github/workflows/ci.yml](.github/workflows/ci.yml)
+runs after `lint` and `test` on every push and pushes two tags:
+
+| Tag                  | When                        |
+|----------------------|-----------------------------|
+| `latest`             | pushes to the default branch |
+| `<branch>-<sha>`     | every push                   |
+
+The job authenticates with the built-in `GITHUB_TOKEN`, so no extra secrets are
+required. Make the package public in **Packages → Package settings** if the
+image has to be pulled without credentials (for example by a Kubernetes cluster
+without an `imagePullSecret`).
+
+### Manual login and push
+
+Manual publishing needs a personal access token with the `write:packages`
+scope (`read:packages` is enough for pulling a private image):
+
+```bash
+export GHCR_TOKEN=<personal-access-token>
+echo "$GHCR_TOKEN" | docker login ghcr.io -u titanmen1 --password-stdin
+```
+
+Build and push through the Makefile targets:
+
+```bash
+make docker-push-ghcr                       # login, build and push :latest
+make docker-push-ghcr TAG=v1.0.0            # push an explicit tag
+```
+
+Or step by step, forcing `linux/amd64` — cloud nodes are x86, while a build on
+an Apple Silicon machine defaults to `arm64`:
+
+```bash
+docker buildx build --platform linux/amd64 \
+  -t ghcr.io/titanmen1/project-devops-deploy:latest --push .
+```
+
+Verify the published image:
+
+```bash
+docker manifest inspect ghcr.io/titanmen1/project-devops-deploy:latest
 ```

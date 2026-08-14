@@ -1,5 +1,9 @@
 ---
 logging:
+  # Тот же путь, что у файлового аппендера в logback-spring.xml: без этого
+  # свойства /actuator/logfile отвечает 404, потому что не знает, где файл.
+  file:
+    name: ${LOG_DIR:/tmp/bulletins-logs}/app.log
   level:
     root: INFO
     org.springframework.boot: INFO
