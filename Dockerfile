@@ -55,5 +55,7 @@ COPY --from=frontend-builder /frontend/dist/ /app/frontend-dist/
 # Открываем порты
 EXPOSE 8080 9090
 
-# Запускаем приложение
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Запускаем приложение через shell, чтобы раскрылся $JAVA_OPTS: в exec-форме
+# ENTRYPOINT переменные окружения не подставляются и флаги JVM терялись.
+# exec обязателен: java должна остаться PID 1 и получать SIGTERM при остановке.
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar app.jar"]
